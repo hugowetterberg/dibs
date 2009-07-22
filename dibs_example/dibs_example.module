@@ -1,0 +1,169 @@
+<?php
+// $Id:
+
+/**
+ * @file
+ * Example implementation of DIBS API
+ */
+ 
+ /**
+ * Implementation of hook_menu().
+ */
+function dibs_example_menu() {
+  $items = array();     
+  $items['payment/dibs/example/form'] = array(
+    'title' => t('DIBS example payment'),
+    'description' => '',
+    'type' => MENU_CALLBACK,
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('dibs_example_frontend_form'),
+    'access callback' => TRUE,    
+  );
+  $items['payment/dibs/example/callbackok'] = array(
+    'title' => t('DIBS example callback ok url'),
+    'description' => '',
+    'type' => MENU_CALLBACK,
+    'page callback' => 'dibs_example_frontend_callback_ok',
+    'access callback' => TRUE,
+  );
+  $items['payment/dibs/example/accept'] = array(
+    'title' => t('DIBS example payment accepted'),
+    'description' => '',
+    'type' => MENU_CALLBACK,
+    'page callback' => 'dibs_example_frontend_accept',
+    'access callback' => TRUE,    
+  );
+  $items['payment/dibs/example/cancel'] = array(
+    'title' => t('DIBS example payment canceled'),
+    'description' => '',
+    'type' => MENU_CALLBACK,
+    'page callback' => 'dibs_example_frontend_cancel',
+    'access callback' => TRUE,    
+  );
+  return $items;
+}
+
+/**
+ * Implementation of hook_dibsapi().
+ */ 
+function dibs_example_dibsapi($op = 'info', $delta = NULL, &$transaction = NULL, $a3 = NULL, $a4 = NULL) {
+  switch ($op) {
+    case 'info':
+      $info['1'] = array('info' => t('Example #1'));
+      $info['2'] = array('info' => t('Example #2'));
+      if (!empty($delta)) {
+        return isset($info[$delta]) ? $info[$delta] : NULL;
+      }
+      else {
+        return $info;
+      }
+      break;            
+    case 'transaction_cancel':
+      break;
+    case 'transaction_accept':
+      break;    
+    case 'transaction_callback':
+      break;                
+  }
+}
+
+
+/**
+ * Form builder; The example form
+ *
+ * @param array $form_state
+ *
+ * @ingroup forms
+ * @see dibs_example_frontend_form_validate()
+ * @see dibs_example_frontend_form_submit()
+ */
+function dibs_example_frontend_form($form_state = array()) {    
+  $form = array();
+  $form['amount'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Amount'),
+    '#maxlength' => 10,
+    '#required' => TRUE,
+    '#description' => t('Write the amount you want to pay here.')
+  );  
+  $form['submit'] = array('#type' => 'submit', '#value' => t('Go to payment'));
+  return $form;
+}
+
+/**
+ * Validate example form
+ *
+ * @param array $form
+ * @param array $form_state
+ * 
+ * @ingroup forms
+ * @see dibs_example_frontend_form()
+ * @see dibs_example_frontend_form_submit()
+ */
+function dibs_example_frontend_form_validate($form, &$form_state) {
+  $amount = $form_state['values']['amount'];
+  if (!is_numeric($amount) && !is_float($amount)) {
+    form_set_error('amount', t('The price is not valid. Please, specify it in the correct format.'));
+  }
+}
+
+/**
+ * Process the example form submit
+ *
+ * @param array $form
+ * @param array $form_state
+ * 
+ * @ingroup forms
+ * @see dibs_example_frontend_form()
+ * @see dibs_example_frontend_form_validate()
+ */
+function dibs_example_frontend_form_submit($form, &$form_state) {
+  $amount = $form_state['values']['amount'];
+  
+  /**
+  * Specifying array with payment info.
+  * 
+  * The following info are required:
+  * - api_module
+  * - api_delta
+  * - payment_price (should be integer or float)
+  * 
+  * Optional info with no fall back
+  * - order_info_short (string)
+  * - order_info_long (should be an array)
+  * 
+  * Optional info with fall back on logged in user data
+  * - customer_uid (integer)
+  * - customer_name
+  * - customer_address
+  * - customer_address2
+  * - customer_city
+  * - customer_zipcode
+  * - customer_country
+  * - customer_email
+  * - customer_phone
+  * 
+  * All info without type specified should be strings.
+  */  
+  $data = array(
+    'api_module'          => 'dibs_example',
+    'api_delta'           => '1',
+    'payment_price'       => $amount,
+    'order_info_short'    => 'Example product #1',
+    'order_info_long'     => array(
+                              array('Qty', 'Text', 'Price'),
+                              array('1', 'Prduct #1', '12.00'),
+                              array('4', 'Prduct #2', '6.00'),
+                              array('2', 'Prduct #5', '9.00'),
+                             ),
+    'order_price_info'    => array(
+                              'Delivery' => '56.25',
+                              'Vat' => '33.78',
+                             ),
+    'customer_name'       => 'Jens Beltofte Sørensen',
+  );
+  
+  // Prepare the DIBS payment  
+  dibs_payment_prepare($data);
+  
+}

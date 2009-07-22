@@ -1,0 +1,7 @@
+; $Id: 
+name = DIBS example
+description = An example implementation of the DIBS API
+package = Propeople
+version = VERSION
+core = 6.x
+dependencies[] = dibs

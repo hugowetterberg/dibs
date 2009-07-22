@@ -1,0 +1,600 @@
+<?php
+// $Id:
+
+/**
+ * Defining some constants
+ */
+// The default module and delta. Settings from these are used as fall back
+// if settings are missing for another implementation
+define('DIBS_DEFAULT_MODULE', 'dibs');
+define('DIBS_DEFAULT_DELTA',  'default');
+
+/**
+ * @file
+ * Handle DIBS payment integration
+ */
+
+/**
+ * Implemention of hook_init()
+ */
+function dibs_init() {
+  // Disabling cache on DIBS pages
+  if (arg(0) == 'payment' && arg(1) == 'dibs') {
+    $GLOBALS['conf']['cache'] = FALSE;
+  }
+}
+
+/**
+ * Implementation of hook_help().
+ */
+function dibs_help($path, $arg) {
+  switch ($path) {
+  }
+}
+
+/**
+ * Implementation of hook_perm().
+ */
+function dibs_perm() {
+  return array('pay using dibs', 'administer dibs settings', 'administer dibs transactions');
+}
+
+/**
+ * Implementation of hook_theme()
+ */
+function dibs_theme() {
+  $themes = array();
+  $themes['dibs_redirect_page'] = array(
+    'arguments' => array('form' => NULL, 'settings' => NULL, 'transaction' => NULL),
+    'template' => 'dibs-redirect-page',
+  );
+  $themes['dibs_cancel_page'] = array(
+    'arguments' => array('form' => NULL, 'settings' => NULL, 'transaction' => NULL),
+    'template' => 'dibs-cancel-page',
+  );
+  $themes['dibs_accept_page'] = array(
+    'arguments' => array('settings' => NULL, 'transaction' => NULL),
+    'template' => 'dibs-accept-page',
+  );
+  $themes['dibs_redirect_form'] = array(
+    'arguments' => array('element' => NULL),
+  );
+  return $themes;
+}
+
+/**
+ * Implementation of hook_menu().
+ */
+function dibs_menu() {
+  $items = array();
+
+  // Admin pages
+  $items['admin/dibs'] = array(
+    'title' => 'DIBS payment', 
+    'description' => 'View transactions and configure DIBS gateway',
+    'page callback' => 'dibs_admin_overview',
+    'file' => 'dibs.admin.inc', 
+    'weight' => 0,
+    'type' => MENU_NORMAL_ITEM,
+    'access callback' => 'dibs_admin_user_access',
+    'access arguments' => array('administer dibs settings', 'administer dibs transactions'),
+  );
+  
+  // Settings pages  
+  $items['admin/dibs/settings'] = array(
+    'page callback' => 'dibs_admin_settings_list',
+    'title' => 'Settings',
+    'description' => 'Configure DIBS payment gateway',
+    'weight' => 1,
+    'type' => MENU_NORMAL_ITEM,
+    'access arguments' => array('administer dibs settings'),
+    'file' => 'dibs.admin.inc',
+  );
+  $items['admin/dibs/settings/edit/%/%'] = array(
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('dibs_admin_settings_form', 4, 5),
+    'title' => 'Change DIBS implementation settings',
+    'type' => MENU_CALLBACK,
+    'access arguments' => array('administer dibs settings'),
+    'file' => 'dibs.admin.inc',
+  );    
+  
+  // Transaction pages
+  /*
+  $items['admin/dibs/transactions'] = array(
+    'page callback' => 'dibs_admin_transactions_list',
+    'title' => 'Transactions',
+    'description' => 'View DIBS payment transactions',
+    'weight' => 2,
+    'type' => MENU_NORMAL_ITEM,
+    'access arguments' => array('administer dibs transactions'),
+    'file' => 'dibs.admin.inc',
+  );
+  $items['admin/dibs/transactions/view/%'] = array(
+    'page callback' => 'dibs_admin_transactions_view',
+    'page arguments' => array(4),
+    'title' => 'View transaction',
+    'type' => MENU_CALLBACK,
+    'access arguments' => array('administer dibs transactions'),
+    'file' => 'dibs.admin.inc',
+  ); 
+  */ 
+  
+  // Front pages
+  $items['payment/dibs/callbackok/%'] = array(
+    'title' => t('DIBS callback ok url'),
+    'description' => '',
+    'type' => MENU_CALLBACK,
+    'page callback' => 'dibs_frontend_dibs_callback_ok',
+    'page arguments' => array(3),
+    'access callback' => TRUE,
+    'file' => 'dibs.frontend.inc',
+  );
+  $items['payment/dibs/accept/%'] = array(
+    'title' => t('DIBS payment accepted'),
+    'description' => '',
+    'type' => MENU_CALLBACK,
+    'page callback' => 'dibs_frontend_accept_page',
+    'page arguments' => array(3),
+    'access arguments' => array('pay using dibs'),
+    'file' => 'dibs.frontend.inc',
+  ); 
+  $items['payment/dibs/cancel/%'] = array(
+    'title' => t('DIBS payment cancelled'),
+    'description' => '',
+    'type' => MENU_CALLBACK,
+    'page callback' => 'dibs_frontend_cancel_page',
+    'page arguments' => array(3),
+    'access arguments' => array('pay using dibs'),
+    'file' => 'dibs.frontend.inc',
+  );
+  $items['payment/dibs/redirect/%'] = array(
+    'title' => t('Redirecting to DIBS payment'),
+    'description' => '',
+    'type' => MENU_CALLBACK,
+    'page callback' => 'dibs_frontend_redirect_page',
+    'page arguments' => array(3),
+    'access arguments' => array('pay using dibs'),
+    'file' => 'dibs.frontend.inc',
+  );
+
+  return $items;
+}
+
+/**
+ * Checking the user access  
+ *  - at least one of the arguments has to be valid.
+ */
+function dibs_admin_user_access() {
+  $args = func_get_args();
+  foreach((array)$args[0] as $perm) {
+    if (user_access($perm)) {
+      return TRUE;
+    }
+  }
+}
+
+/**
+ * Implementation of hook_dibsapi().
+ * 
+ * The settings for option "default" will be used as fall back for other implementations.
+ */ 
+function dibs_dibsapi($op = 'info', $delta = NULL, &$transaction = NULL, $a3 = NULL, $a4 = NULL) {
+  switch ($op) {
+    case 'info':
+      $info['default'] = array('info' => t('Default'));
+      if (!empty($delta)) {
+        return isset($info[$delta]) ? $info[$delta] : NULL;
+      }
+      else {
+        return $info;
+      }
+      break;            
+  }
+}
+
+/**
+ * Checking if a certain module and delta are the default one.
+ * 
+ * @param stirng $module
+ * @param multi $delta
+ * 
+ * @return bool
+ */
+function dibs_is_default($module, $delta) {
+  if ($module == DIBS_DEFAULT_MODULE && $delta == DIBS_DEFAULT_DELTA) {
+    return TRUE;
+  }
+  else {
+    return FALSE;
+  }
+}
+
+/**
+ * Finds and returns the value for a given setting
+ * 
+ * @param string $module
+ * @param string $delta
+ * @param string $group
+ * @param string $key
+ * @param string $default_value
+ * 
+ * @return string
+ */
+function dibs_get_settings_value($module, $delta, $group, $key, $default_value = '') {
+  static $settings;
+  if (!is_array($settings[$module][$delta])) {
+    $settings[$module][$delta] = dibs_load_settings($module, $delta, FALSE);
+  }
+  return isset($settings[$module][$delta][$group][$key]) ? $settings[$module][$delta][$group][$key] : $default_value;
+}
+
+/**
+ * Gets the next order ID for a certain module / delta and depending on the arguments
+ * will the record in the table dibs_order_id_settings bed updated.
+ * 
+ * @param string $module
+ * @param string $delta
+ * @param bool $update_table
+ * - Should the record in the table dibs_order_id_settings be updated?
+ * @param bool $add_prefix_suffix
+ * - Should the prefix and suffix be added to the returned string
+ * @param bool $fallback
+ * - Should we fallback to the default setting if no settings exists?
+ * 
+ * @return multi
+ */
+function dibs_get_next_order_id($module, $delta, $update_table = TRUE, $add_prefix_suffix = TRUE, $fallback = TRUE) {
+  db_lock_table('dibs_order_id_settings');
+  $settings = db_fetch_array(db_query("SELECT * FROM {dibs_order_id_settings} WHERE api_module = '%s' AND api_delta = '%s'", $module, $delta));
+  if (empty($settings) && $fallback) {
+    // Unlocking tables
+    db_unlock_tables();
+    
+    // We try to get the data from the default setting instead
+    return dibs_get_next_order_id(DIBS_DEFAULT_MODULE, DIBS_DEFAULT_DELTA, $update_table, $add_prefix_suffix, FALSE);
+  }
+  else if (is_array($settings)) {
+    $next_order_id = $settings['order_id'] + 1;
+    
+    // Updating value in table    
+    if ($update_table) {
+      db_query("UPDATE {dibs_order_id_settings} SET order_id = %d WHERE api_module = '%s' AND api_delta = '%s'", $next_order_id, $module, $delta);
+    }
+    
+    // Unlocking tables
+    db_unlock_tables();
+    
+    // Returns the found value
+    return $add_prefix_suffix ? $settings['order_id_prefix'].$next_order_id.$settings['order_id_suffix'] : $next_order_id;    
+  }
+  else {
+    // Unlocking tables
+    db_unlock_tables();
+    
+    return NULL;
+  }  
+}
+
+/**
+ * Loading settings array for a module and delta
+ *
+ * @param string $module
+ * @param string $delta
+ * @param bool $fallback
+ * - If TRUE will we try to merge the settings array with the default one.
+*/
+function dibs_load_settings($module, $delta, $fallback = TRUE) {
+  $settings = variable_get('dibs_settings_'.$module.'_'.$delta, array());
+  if ($fallback) {
+    $merged_settings = array();
+    $default_settings = variable_get('dibs_settings_'.DIBS_DEFAULT_MODULE.'_'.DIBS_DEFAULT_DELTA, array());
+    foreach((array)$default_settings as $group => $child) {
+      if (is_array($child)) {
+        foreach($child as $key => $value) {
+          $merged_settings[$group][$key] = (strlen(trim($settings[$group][$key])) > 0) ? $settings[$group][$key] : $value;
+        }        
+      }
+      else {
+        $merged_settings[$group] = (strlen(trim($settings[$group][$key])) > 0) ? $settings[$group] : $child;
+      }    
+    }
+    return $merged_settings;
+  }
+  else {
+    $return = $settings;
+  
+    // Loading order id settings
+    $orderid = db_fetch_array(db_query("SELECT * FROM {dibs_order_id_settings} WHERE api_module = '%s' AND api_delta = '%s'", $module, $delta));
+    
+    // Mergning arrays and returns them
+    return array_merge($return, array('orderid' => $orderid));
+  }
+}
+
+/**
+ * Load a transaction from the hash value or the transaction id.
+ *
+ * @param $key
+ *   Is either the transaction id (tid) or the hash value
+ * @param $op
+ *   Is either tid or hash.
+ *
+ * @return
+ *   A fully-loaded $stransaction array upon successful transaction load or FALSE if transaction
+ *   cannot be loaded.
+ */
+function dibs_load_transaction($key = NULL, $op = 'tid') {
+  if ($op == 'tid' && is_numeric($key)) {
+    $result = db_query('SELECT * FROM {dibs_transactions} WHERE tid = %d', $key);
+  }
+  else if ($op == 'hash' && !empty($key)) {
+    $result = db_query("SELECT * FROM {dibs_transactions} WHERE api_hash = '%s'", $key);
+  }
+  else {
+    return FALSE;
+  }
+  if ($transaction = db_fetch_array($result)) {
+    $transaction['order_info_long'] = unserialize($transaction['order_info_long']);
+    $transaction['order_price_info'] = unserialize($transaction['order_price_info']);
+    return $transaction;
+  }
+  else {
+    return FALSE;
+  }
+}
+
+/**
+ * Preparing the payment
+ * - Creating a transaction record in the db
+ * - Redirecting the user to payment redirect page
+ * 
+ * @param array $data
+ */
+function dibs_payment_prepare($data) {
+  global $user;
+
+  // Checking required data in $data array
+  if (!empty($data['api_module']) && !empty($data['api_delta'])) {
+    $info = module_invoke($data['api_module'], 'dibsapi', 'info', $data['api_delta']);
+    if (empty($info) || !is_array($info)) {
+      drupal_set_message(t('Error preparing the payment: api_module and/or api_delta is not valid!'), 'error');
+      return '';
+    }
+  }
+  else if (!empty($data['api_module']) || !empty($data['api_delta'])) {
+    drupal_set_message(t('Error preparing the payment: api_module or api_delta is missing!'), 'error');    
+    return '';
+  }
+  
+  if (empty($data['payment_price']) || (!is_numeric($data['payment_price']) && !is_float($data['payment_price'])) || $data['payment_price'] <= 0) {
+    drupal_set_message(t('Error preparing the payment: payment_price is missing or not valid!'), 'error');    
+    return '';    
+  }
+  
+  // DIBS transaction data
+  $hash = isset($_SESSION['dibs'][$data['api_module']][$data['api_delta']]['hash']) ? $_SESSION['dibs'][$data['api_module']][$data['api_delta']]['hash'] : NULL; 
+  if (!empty($hash) && is_string($hash)) {
+    // We are forcing the system to use a new transaction id for every load of this page, 
+    // therefore are we deleting the old transaction record
+    db_query("DELETE FROM {dibs_transactions} WHERE payment_status < 1 AND api_hash = '%s'", $hash);
+    $hash = NULL;
+  }
+  
+  // Getting DIBS settings
+  $settings = dibs_load_settings($data['api_module'], $data['api_delta']);
+  
+  // Adding default data to data array if some things missing
+  $data += array(
+    'payment_transaction_type' => 'normal',
+    'order_info_short' => '',
+    'order_info_long' => array(),
+    'order_price_info' => array(),
+    'customer_uid' => $user->uid,
+    'customer_name' => '',
+    'customer_address' => '',
+    'customer_address_2' => '',
+    'customer_city' => '',
+    'customer_zipcode' => '',
+    'customer_country' => '',
+    'customer_email' => $user->mail,
+    'customer_phone' => '',
+  );
+  
+  // Generating order id
+  $order_id = dibs_get_next_order_id($data['api_module'], $data['api_deta']);
+  
+  // Creating new api_hash
+  $hash = sha1(time().$order_id.drupal_get_private_key());
+  
+  // Creating dibs transaction
+  db_query("
+          INSERT INTO {dibs_transactions}
+          (
+            api_module,
+            api_delta,
+            api_hash,
+            order_info_short,
+            order_info_long,
+            order_price_info,
+            payment_time,
+            payment_order_id,
+            payment_status,
+            payment_currency,
+            payment_price,
+            payment_transaction_type,
+            customer_uid,
+            customer_name,
+            customer_address,
+            customer_address_2,
+            customer_city,
+            customer_zipcode,
+            customer_country,
+            customer_email,
+            customer_phone
+          )
+          VALUES
+          (
+            '%s',
+            '%s',
+            '%s',
+            '%s',
+            '%s',
+            '%s',
+            NOW(),
+            '%s',
+            0,
+            '%s',
+            %f,
+            '%s',
+            %d,
+            '%s',
+            '%s',
+            '%s',
+            '%s',
+            '%s',
+            '%s',
+            '%s',
+            '%s'
+          )",
+          $data['api_module'],
+          $data['api_delta'],
+          $hash,
+          $data['order_info_short'],
+          serialize($data['order_info_long']),
+          serialize($data['order_price_info']),
+          $order_id,
+          $settings['general']['currency'],
+          $data['payment_price'],
+          $data['payment_transaction_type'],
+          $data['customer_uid'],
+          $data['customer_name'],
+          $data['customer_address'],
+          $data['customer_address_2'],
+          $data['customer_city'],
+          $data['customer_zipcode'],
+          $data['customer_country'],
+          $data['customer_email'],
+          $data['customer_phone']          
+  );             
+  
+  // Saving new api_hash in session
+  $_SESSION['dibs'][$data['api_module']][$data['api_delta']]['hash'] = $hash;
+   
+  // Redirecting to the payment redirect page
+  drupal_goto('payment/dibs/redirect/'.$hash);
+  
+  exit;   
+  
+}
+
+/**
+ * Create the hidden order line fields from 
+ * the order_info_long array in the transaction.
+ * 
+ * @param array $data
+ * 
+ * @return array $form
+ */
+function dibs_create_order_line_fields($data) {
+  $form = array();
+  if (is_array($data)) {
+    if (is_array(current($data))) {
+      $i = 0;
+      foreach($data as $line) {
+        $j = 1;
+        foreach($line as $column) {
+          $form['ordline'.$i.'-'.$j] = array(
+            '#type' => 'hidden',
+            '#value' => $column
+          );
+          $j++;
+        }
+        $i++;    
+      }
+    }
+  }
+  return $form;  
+}
+
+/**
+ * Create the hidden price info fields from 
+ * the order_price_info array in the transaction.
+ * 
+ * @param array $data
+ * 
+ * @return array $form
+ */
+function dibs_create_price_line_fields($data) {
+  $form = array();
+  if (is_array($data)) {
+    $i = 1;
+    foreach($data as $key => $value) {
+      $form['priceinfo'.$i.'.'.$key] = array(
+        '#type' => 'hidden',
+        '#value' => $value
+      );
+      $i++;    
+    }
+  }
+  return $form;  
+}
+
+/**
+ * Create the hidden delivery info fields from 
+ * the customer fields in the transaction.
+ * 
+ * @param array $data
+ * 
+ * @return array $form
+ */
+function dibs_create_delivery_line_fields($data) {
+  $form = array();
+  if (is_array($data)) {
+    $i = 1;
+    foreach($data as $key => $value) {
+      if (strpos($key, 'customer_') !== FALSE && !empty($value)) {
+        $key = str_replace('customer_', '', $key);
+        $form['delivery'.$i.'.'.ucfirst($key)] = array(
+          '#type' => 'hidden',
+          '#value' => $value
+        );
+        $i++;
+      }
+    }
+  }
+  return $form;  
+}
+
+/**
+ * Preprocess function for the dibs_redirect_page theme
+ * 
+ * @param array $variables
+ */
+function template_preprocess_dibs_redirect_page(&$variables) {
+  $transaction = $variables['transaction'];
+  $variables['template_files'][] = 'dibs-redirect-page-'. $transaction['api_module'];
+  $variables['template_files'][] = 'dibs-redirect-page-'. $transaction['api_module'] .'-'.$transaction['api_delta'];
+}
+
+/**
+ * Preprocess function for the dibs_cancel_page theme
+ * 
+ * @param array $variables
+ */
+function template_preprocess_dibs_cancel_page(&$variables) {
+  $transaction = $variables['transaction'];
+  $variables['template_files'][] = 'dibs-cancel-page-'. $transaction['api_module'];
+  $variables['template_files'][] = 'dibs-cancel-page-'. $transaction['api_module'] .'-'.$transaction['api_delta'];
+}
+
+/**
+ * Preprocess function for the dibs_accept_page theme
+ * 
+ * @param array $variables
+ */
+function template_preprocess_dibs_accept_page(&$variables) {
+  $transaction = $variables['transaction'];
+  $variables['template_files'][] = 'dibs-accept-page-'. $transaction['api_module'];
+  $variables['template_files'][] = 'dibs-accept-page-'. $transaction['api_module'] .'-'.$transaction['api_delta'];
+}

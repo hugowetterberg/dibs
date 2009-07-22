@@ -1,0 +1,60 @@
+$Id:
+
+------------------------------------------------------------
+Installation and Configuration
+
+1. Install both the DIBS and the DIBS Example modules. If you already has it installed, then please reinstall it!
+
+2. Go to admin/dibs/settings. It is here possible to configure the module for each hook_dibsapi implementation, actually in delta level. If some configuration is missing on an implementation, will it fall back to the default implementation - the one on the DIBS module (admin/dibs/settings/edit/dibs/default).
+
+3. Go to admin/dibs/settings/edit/dibs/default and configure the different settings.
+
+Testing of the module:
+1. Go to payment/dibs/example/form which is the test form the dibs_demo module provides.
+2. Fill in a test amount and click next.
+3. You are now redirected to the gateway
+4. Use one of the test credit card numbers from http://tech.dibs.dk/10-step-guide/10-step-guide/5-your-own-test/.
+5. When you have paid should you be redirected back to payment/dibs/accept/XXXXXXXXX and the hidden callback should have updated the fields: payment_status, payment_transaction_id and payment_type in the dibs_transactions table.
+
+API / HOOK_DIBSAPI
+Take a look at the file hook_dibsapi.php in the module folder and the dibs_example.module.
+
+As you can see is it not required that you make a redirect in the options transaction_cancel and transaction_accept, the dibs module it self will handle this, but if you want to have a special page shown are you able to redirect here. There is just one thing: when the user decides on the default cancel page to return back t othe payment form, is the submit function generating a new order id and updates the transaction with this - the reason for this is that some payment methods (edankort) requires a new order id if the user cancel the payment. It is a bit stupid that it is done in the submit function, specially if some modules use their own redirect on the cancel page. I am thinking for a solution here, so we are sure that it works every time.
+
+The redirect page, cancel page and accept page are all using theming templates, and these are made alvailable for each module/delta or module. For example:
+
+dibs-redirect-page-MODULE.tpl.php
+dibs-redirect-page-MODULE-DELTA.tpl.php
+dibs-cancel-page-MODULE.tpl.php
+dibs-cancel-page-MODULE-DELTA.tpl.php
+dibs-accept-page-MODULE.tpl.php
+dibs-accept-page-MODULE-DELTA.tpl.php
+
+General templates of course exists for fall back or for general use. These are named dibs-redirect-page.tpl.php, dibs-cancel-page.tpl.php, dibs-accept-page.tpl.php.
+
+When you have to send an user to a the payment process should your function include the following:
+
+  $data = array(
+    'api_module'          => 'dibs_example',
+    'api_delta'           => '1',
+    'payment_price'       => $amount,
+    'order_info_short'    => 'Example product #1',
+    'order_info_long'     => array(
+                              array('Qty', 'Text', 'Price'),
+                              array('1', 'Prduct #1', '12.00'),
+                              array('4', 'Prduct #2', '6.00'),
+                              array('2', 'Prduct #5', '9.00'),
+                             ),
+    'order_price_info'    => array(
+                              'Delivery' => '56.25',
+                              'Vat' => '33.78',
+                             ),
+    'customer_name'       => 'Jens Beltofte Sørensen',
+  );
+  
+  // Prepare the DIBS payment  
+  dibs_payment_prepare($data);
+
+The dibs_payment_prepare() function creates the transaction record, creating the hash etc. and redirects to the payment redirect page. Note that the order_info_long array is not required, if it is included should it be an array like above - the array are used to procude a kind of table therefore is the first part of the array the column titles. The order_price_info should also be an array, but again can it be skipped.
+
+------------------------------------------------------------

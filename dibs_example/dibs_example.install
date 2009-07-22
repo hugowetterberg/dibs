@@ -1,0 +1,23 @@
+<?php
+// $Id:
+
+/**
+ * Implementation of hook_install().
+ */
+function dibs_example_install() {
+}
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function dibs_example_uninstall() {
+}
+
+/**
+ * Implementation of hook_schema().
+ */
+function dibs_example_schema() {
+  $schema = array();
+  return $schema;
+}
+
