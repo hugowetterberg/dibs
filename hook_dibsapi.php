@@ -9,14 +9,14 @@
  *   - "info": Used to get information about the modules that implements the dibsapi.
  *   - "transaction_cancel": Executed when a transaction is cancelled by the user.
  *      For example used to make a module specific redirect after the transaction is
- *      cancelled. 
+ *      cancelled.
  *   - "transaction_accept": Executed when a transaction is accepted.
  *      For example used to make a module specific redirect after the transaction is
  *      accepted
  *   - "transaction_callback": Executed after the hidden callback from DIBS when payment
  *      is completed.
  * @param $delta
- *   Which DIBS implementation to return. 
+ *   Which DIBS implementation to return.
  *   Although it is most commonly an integer starting at 0, this is not mandatory.
  * @param &$transaction
  *   An object with all the information about the transaction.
@@ -34,14 +34,14 @@ function hook_dibsapi($op = 'info', $delta = NULL, &$transaction = NULL, $a3 = N
   switch ($op) {
     case 'info':
       $info[0] = array('info' => t('DIBS implementation #1.......'));
-      $info[1] = array('info' => t('DIBS implementation #2.......'));      
+      $info[1] = array('info' => t('DIBS implementation #2.......'));
       if (!empty($delta)) {
         return isset($info[$delta]) ? $info[$delta] : NULL;
       }
       else {
         return $info;
       }
-      break;            
+      break;
     case 'transaction_cancel':
       switch($delta) {
         case 0:
@@ -49,7 +49,7 @@ function hook_dibsapi($op = 'info', $delta = NULL, &$transaction = NULL, $a3 = N
           break;
         case 1:
           drupal_goto(drupal_get_path_alias('some-path/payment/aborted/2'));
-          break;          
+          break;
         }
       break;
     case 'transaction_accept':
@@ -59,13 +59,13 @@ function hook_dibsapi($op = 'info', $delta = NULL, &$transaction = NULL, $a3 = N
           break;
         case 1:
           drupal_goto(drupal_get_path_alias('some-path/payment/receipt/2'));
-          break;          
+          break;
         }
-      break;    
+      break;
     case 'transaction_callback':
       // Doing some stuff when the payment is completed.
       // For example sending receipt mail or what else is needed
-      break;                
+      break;
   }
 }
 

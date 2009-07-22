@@ -9,7 +9,7 @@
  * Available variables:
  * - $form:  The whole form element as a string.
  * - $settings: Full DIBS settings array.
- * - $transaction: Full transaction array with all info about 
+ * - $transaction: Full transaction array with all info about
  *   the transaction.
  *
  * @see template_preprocess()

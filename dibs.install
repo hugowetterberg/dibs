@@ -7,7 +7,7 @@
 function dibs_install() {
   // Create tables.
   drupal_install_schema('dibs');
-  
+
   // Inserting default order id setting
   db_query("INSERT INTO {dibs_order_id_settings} VALUES ('dibs', 'default', 10000, '', '')");
 }
@@ -27,7 +27,7 @@ function dibs_uninstall() {
 /**
  * Implementation of hook_schema().
  */
-function dibs_schema() {  
+function dibs_schema() {
   $schema['dibs_transactions'] = array(
     'description' => t('Stores dibs transactions'),
     'fields' => array(
@@ -51,14 +51,14 @@ function dibs_schema() {
         'not null' => TRUE,
         'default' => '',
         'description' => t('API delta value'),
-      ), 
+      ),
       'api_hash' => array(
         'type' => 'varchar',
         'length' => 64,
         'not null' => TRUE,
         'default' => '',
         'description' => t('API hash value. Used in payment process'),
-      ),                      
+      ),
       'order_info_short' => array(
         'type' => 'varchar',
         'length' => 255,
@@ -71,13 +71,13 @@ function dibs_schema() {
         'not null' => TRUE,
         'default' => '',
         'description' => t('Order info long. Serialized'),
-      ), 
+      ),
       'order_price_info' => array(
         'type' => 'text',
         'not null' => TRUE,
         'default' => '',
         'description' => t('Order price info. Serialized'),
-      ),           
+      ),
       'payment_time' => array(
         'type' => 'datetime',
         'description' => t('Payment time'),
@@ -89,7 +89,7 @@ function dibs_schema() {
         'not null' => TRUE,
         'default' => '',
         'description' => t('Order id'),
-      ),      
+      ),
       'payment_status' => array(
         'type' => 'int',
         'length' => 1,
@@ -114,7 +114,7 @@ function dibs_schema() {
         'not null' => TRUE,
         'default' => '',
         'description' => t('The payment type the user choose in the payment window.'),
-      ),      
+      ),
       'payment_transaction_type' => array(
         'type' => 'varchar',
         'length' => 10,
@@ -128,7 +128,7 @@ function dibs_schema() {
         'not null' => TRUE,
         'length' => 10,
         'description' => t('Transaction id from DIBS.'),
-      ),            
+      ),
       'customer_uid' => array(
         'type' => 'int',
         'unsigned' => TRUE,
@@ -191,7 +191,7 @@ function dibs_schema() {
         'not null' => TRUE,
         'default' => '',
         'description' => t('The customers phone'),
-      ),    
+      ),
     ),
     'indexes' => array(
       'payment_time' => array('payment_time'),
@@ -202,10 +202,10 @@ function dibs_schema() {
       'customer_uid' => array('customer_uid'),
       'api_idx' => array('api_module', 'api_delta'),
       'api_hash' => array('api_hash'),
-    ),    
+    ),
     'primary key' => array('tid'),
   );
-  
+
   $schema['dibs_transactions_log'] = array(
     'description' => t('Logs different events related to a transaction'),
     'fields' => array(
@@ -229,14 +229,14 @@ function dibs_schema() {
         'not null' => TRUE,
         'default' => '',
         'description' => t('Log record subtype. Used to thme a certain log line. Not required'),
-      ),                          
+      ),
       'log_text' => array(
         'type' => 'varchar',
         'length' => 255,
         'not null' => TRUE,
         'default' => '',
         'description' => t('Log text.'),
-      ),    
+      ),
       'log_value' => array(
         'type' => 'varchar',
         'length' => 32,
@@ -256,8 +256,8 @@ function dibs_schema() {
       'type' => array('type'),
       'subtype' => array('subtype'),
     ),
-  );   
-  
+  );
+
   $schema['dibs_order_id_settings'] = array(
     'description' => t('Used to store order id settings for each dibs implementation'),
     'fields' => array(
@@ -274,7 +274,7 @@ function dibs_schema() {
         'not null' => TRUE,
         'default' => '',
         'description' => t('API delta value'),
-      ),  
+      ),
       'order_id' => array(
         'type' => 'int',
         'length' => 10,
@@ -294,12 +294,12 @@ function dibs_schema() {
         'not null' => TRUE,
         'default' => '',
         'description' => t('Order id suffix'),
-      ),     
+      ),
     ),
     'indexes' => array(
       'api_idx' => array('api_module', 'api_delta'),
       'order_id' => array('order_id'),
-    ),    
+    ),
     'primary key' => array('api_module', 'api_delta'),
   );
   return $schema;

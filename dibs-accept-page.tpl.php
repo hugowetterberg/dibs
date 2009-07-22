@@ -8,7 +8,7 @@
  *
  * Available variables:
  * - $settings: Full DIBS settings array.
- * - $transaction: Full transaction array with all info about 
+ * - $transaction: Full transaction array with all info about
  *   the transaction.
  *
  * @see template_preprocess()

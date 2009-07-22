@@ -7,14 +7,14 @@
  */
 
  /**
- * This function is called when user enter in admin/dibs 
- * @return string 
+ * This function is called when user enter in admin/dibs
+ * @return string
  */
 function dibs_admin_overview() {
   $output = '';
   $item = menu_get_item('admin/dibs');
   $content = system_admin_menu_block($item);
-  $output = theme('admin_block_content', $content);  
+  $output = theme('admin_block_content', $content);
   return $output;
 }
 
@@ -25,7 +25,7 @@ function dibs_admin_overview() {
 */
 function dibs_admin_settings_list() {
   drupal_add_css(drupal_get_path('module', 'dibs') .'/dibs.admin.css');
-  
+
   // Looping through all modules that implement the hook_dibsapi.
   $output = '<br />';
   $i = 0;
@@ -34,25 +34,25 @@ function dibs_admin_settings_list() {
       $output .= '<p></p>';
     }
     $output .= '<h3>'.t('Module').': '.$module.'</h3>';
-    
+
     // Adding table headers
     $header = array(
       array('data' => t('Name'), 'class' => 'dibs-admin-settings-title'),
       array('data' => t('Operation'), 'class' => 'dibs-admin-settings-operation')
     );
-  
-    $rows = array(); 
+
+    $rows = array();
     // Looping through deltas for a specific module implementation of hook_dibsapi)).
     foreach((array)module_invoke($module, 'dibsapi') as $delta => $info) {
       $row = array(
         array('data' => $info['info'], 'class' => ''),
         array('data' => l(t('edit'), 'admin/dibs/settings/edit/'.$module.'/'.$delta), 'class' => ''),
-      );  
+      );
       $rows[] = $row;
     }
     $output .= theme('table', $header, $rows, array('class' => 'dibs-admin-settings-list'));
   }
-  
+
   return $output;
 }
 
@@ -74,16 +74,16 @@ function dibs_admin_settings_form($form_state = array(), $module = null, $delta 
     drupal_not_found();
     exit;
   }
-  
+
   // Checking if module and delta are default
   $default = dibs_is_default($module, $delta);
-  
+
   // Setting page title
   drupal_set_title(t('Change DIBS implementation settings: %module > %delta', array('%module' => t($module), '%delta' => $info['info'])));
-  
+
   // Loading settings
   $settings = dibs_load_settings($module, $delta, FALSE);
-    
+
   $form = array();
   // General
   $form['general'] = array(
@@ -118,11 +118,11 @@ function dibs_admin_settings_form($form_state = array(), $module = null, $delta 
   $form['general']['type'] = array(
     '#type' => 'select',
     '#title' => t('Window type'),
-    '#required' => $default,    
+    '#required' => $default,
     '#options' => array('' => '', 'pay' => t('Pay window'), 'flex' => t('Flex window')),
     '#default_value' => dibs_get_settings_value($module, $delta, 'general', 'type', ($default ? 1 : '')),
     '#description' => t('If enabled, DIBS will make some extra checks on the sended data, to be sure that no one manipulated it. If enabled should the keys below be filled in!'),
-  );  
+  );
   $form['general']['md5'] = array(
     '#type' => 'select',
     '#title' => t('Perform MD5 control'),
@@ -145,12 +145,12 @@ function dibs_admin_settings_form($form_state = array(), $module = null, $delta 
     '#required' => FALSE,
     '#default_value' => dibs_get_settings_value($module, $delta, 'general', 'md5_key2', ''),
     '#description' => t('MD5 key 2 - used if "Perform MD5 control" is enabled.')
-  );  
+  );
   $form['general']['lang'] = array(
     '#type' => 'select',
     '#title' => t('Language'),
     '#options' => array(
-                        '' => '',    
+                        '' => '',
                         'da' => 'Danish',
                         'sv' => 'Swedish',
                         'no' => 'Norwegian',
@@ -171,7 +171,7 @@ function dibs_admin_settings_form($form_state = array(), $module = null, $delta 
     '#type' => 'select',
     '#title' => t('Currency'),
     '#options' => array(
-                        '' => '',    
+                        '' => '',
                         '208' => 'Danish crowner (DKK)',
                         '978' => 'Euro (EUR)',
                         '840' => 'US Dollar $ (USD)',
@@ -190,7 +190,7 @@ function dibs_admin_settings_form($form_state = array(), $module = null, $delta 
     '#default_value' => dibs_get_settings_value($module, $delta, 'general', 'currency', ''),
     '#description' => t('Currency code for the currency used when paying.')
   );
-  
+
   // Payment window
   $form['paymentwindow'] = array(
     '#type' => 'fieldset',
@@ -198,12 +198,12 @@ function dibs_admin_settings_form($form_state = array(), $module = null, $delta 
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
     '#tree' => TRUE,
-  );  
+  );
   $form['paymentwindow']['color'] = array(
     '#type' => 'select',
     '#title' => t('Color theme'),
     '#options' => array(
-                        '' => '',    
+                        '' => '',
                         'sand' => t('Sand'),
                         'grey' => t('Grey'),
                         'blue' => t('Blue'),
@@ -212,7 +212,7 @@ function dibs_admin_settings_form($form_state = array(), $module = null, $delta 
     '#default_value' => dibs_get_settings_value($module, $delta, 'paymentwindow', 'color', ''),
     '#description' => t('The color theme for the DIBS popup window.')
   );
-  
+
   // Flex window
   $form['flexwindow'] = array(
     '#type' => 'fieldset',
@@ -220,7 +220,7 @@ function dibs_admin_settings_form($form_state = array(), $module = null, $delta 
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
     '#tree' => TRUE,
-  );  
+  );
   $form['flexwindow']['color'] = array(
     '#type' => 'select',
     '#title' => t('Color theme'),
@@ -260,7 +260,7 @@ function dibs_admin_settings_form($form_state = array(), $module = null, $delta 
     '#default_value' => dibs_get_settings_value($module, $delta, 'flexwindow', 'voucher', ''),
     '#description' => t('If set to Yes, then the list of payment types on the first page of FlexWin will contain vouchers, too.')
   );
-  
+
   // Order ID
   $form['orderid'] = array(
     '#type' => 'fieldset',
@@ -299,8 +299,8 @@ function dibs_admin_settings_form($form_state = array(), $module = null, $delta 
     '#required' => FALSE,
     '#default_value' => !empty($settings['orderid']['order_id_suffix']) ? $settings['orderid']['order_id_suffix'] : '',
     '#description' => t('Suffix used after the order ID value, when the payment is sent to DIBS. Using the prefix and/or suffix makes it easier to control that the order ID is unique when sent to DIBS.')
-  );  
-  
+  );
+
   // Advanced settings
   $form['advanced'] = array(
     '#type' => 'fieldset',
@@ -315,7 +315,7 @@ function dibs_admin_settings_form($form_state = array(), $module = null, $delta 
     '#options' => array('' => '', 0 => t('No'), 1 => t('Yes')),
     '#default_value' => dibs_get_settings_value($module, $delta, 'advanced', 'calcfee', ($default ? 0 : '')),
     '#description' => t('If enabled, the Payment Window will automatically affix the charge due to the transaction, i.e. the charge payable to the acquirer (e.g. PBS), and display this to the customer.'),
-  );    
+  );
   $form['advanced']['capturenow'] = array(
     '#type' => 'select',
     '#title' => t('Capture now'),
@@ -353,27 +353,27 @@ function dibs_admin_settings_form($form_state = array(), $module = null, $delta 
 function dibs_admin_settings_form_validate($form, &$form_state) {
   $module = $form_state['values']['module'];
   $delta  = $form_state['values']['delta'];
-  
+
   // Checking if the module and delta exists
   $info = module_invoke($module, 'dibsapi', 'info', $delta);
   if (empty($info) || !is_array($info) || empty($module) || empty($delta)) {
     drupal_not_found();
     exit;
   }
-  
+
   // Checking if module and delta are default
   $default = dibs_is_default($module, $delta);
-  
+
   // Checking if keys are filled in when MD5 check is enabled
   if ($form_state['values']['general']['md5'] == 1) {
     if (empty($form_state['values']['general']['md5_key1'])) {
-      form_set_error('general][md5_key1', t('Please, fill in the missing key, or disable "Perform MD5 control". The MD5 keys can be found in the DIBS administration.'));  
+      form_set_error('general][md5_key1', t('Please, fill in the missing key, or disable "Perform MD5 control". The MD5 keys can be found in the DIBS administration.'));
     }
     if (empty($form_state['values']['general']['md5_key2'])) {
-      form_set_error('general][md5_key2', t('Please, fill in the missing key, or disable "Perform MD5 control". The MD5 keys can be found in the DIBS administration.'));  
+      form_set_error('general][md5_key2', t('Please, fill in the missing key, or disable "Perform MD5 control". The MD5 keys can be found in the DIBS administration.'));
     }
   }
-  
+
   // Checking order ID settings
   if ($default && empty($form_state['values']['orderid']['order_id'])) {
     form_set_error('orderid][order_id', t('Please, fill in the next order ID.'));
@@ -381,7 +381,7 @@ function dibs_admin_settings_form_validate($form, &$form_state) {
   else if (!empty($form_state['values']['orderid']['order_id']) && !is_numeric($form_state['values']['orderid']['order_id'])) {
     form_set_error('orderid][order_id', t('The order ID should be numeric.'));
   }
-  
+
 }
 
 /**
@@ -398,14 +398,14 @@ function dibs_admin_settings_form_submit($form, &$form_state) {
   $flexwindow     = $form_state['values']['flexwindow'];
   $orderid        = $form_state['values']['orderid'];
   $advanced       = $form_state['values']['advanced'];
-  
+
   // Checking if the module and delta exists
   $info = module_invoke($module, 'dibsapi', 'info', $delta);
   if (empty($info) || !is_array($info) || empty($module) || empty($delta)) {
     drupal_not_found();
     exit;
   }
-    
+
   // Creating array with settings and saving it as a variable
   $settings = array(
     'general' => $general,
@@ -414,13 +414,13 @@ function dibs_admin_settings_form_submit($form, &$form_state) {
     'advanced' => $advanced
   );
   variable_set('dibs_settings_'.$module.'_'.$delta, $settings);
-  
+
   // Saving order ID settings
   $result = db_result(db_query("SELECT api_module FROM {dibs_order_id_settings} WHERE api_module = '%s' AND api_delta = '%s'", $module, $delta));
-    
+
   if (!empty($result)) {
     db_query("UPDATE {dibs_order_id_settings} SET order_id = %d, order_id_suffix = '%s', order_id_prefix = '%s' WHERE api_module = '%s' AND api_delta = '%s'",
-      $orderid['order_id'], $orderid['order_id_suffix'], $orderid['order_id_prefix'], $module, $delta); 
+      $orderid['order_id'], $orderid['order_id_suffix'], $orderid['order_id_prefix'], $module, $delta);
   }
   else {
     db_query("INSERT INTO {dibs_order_id_settings} (api_module, api_delta, order_id, order_id_prefix, order_id_suffix) VALUES ('%s', '%s', %d, '%s', '%s')",
