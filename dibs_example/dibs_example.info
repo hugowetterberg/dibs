@@ -1,4 +1,4 @@
-; $Id: 
+; $Id$
 name = DIBS example
 description = An example implementation of the DIBS API
 package = Propeople

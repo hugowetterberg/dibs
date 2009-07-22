@@ -1,5 +1,5 @@
 <?php
-// $Id:
+// $Id$
 
 /**
  * Makes it possible for other modules to implement the DIBS payment gateway.
