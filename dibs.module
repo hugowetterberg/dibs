@@ -431,7 +431,7 @@ function dibs_payment_prepare($data) {
     'customer_email' => $data['customer_email'],
     'customer_phone' => $data['customer_phone'],
   );
-  drupal_write_record('dibs_transaction', $transaction);
+  drupal_write_record('dibs_transactions', $transaction);
 
   // Saving new api_hash in session
   $_SESSION['dibs'][$data['api_module']][$data['api_delta']]['hash'] = $hash;
