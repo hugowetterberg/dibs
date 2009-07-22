@@ -155,11 +155,11 @@ function dibs_example_frontend_form_submit($form, &$form_state) {
                               array('1', 'Prduct #1', '12.00'),
                               array('4', 'Prduct #2', '6.00'),
                               array('2', 'Prduct #5', '9.00'),
-                             ),
+                            ),
     'order_price_info'    => array(
                               'Delivery' => '56.25',
                               'Vat' => '33.78',
-                             ),
+                            ),
     'customer_name'       => 'Jens Beltofte Sørensen',
   );
 

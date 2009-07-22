@@ -19,10 +19,10 @@ function dibs_admin_overview() {
 }
 
 /**
-* List of implementations of the DIBS module.
-* Link to edit settings for each implementation
-* @return string
-*/
+ * List of implementations of the DIBS module.
+ * Link to edit settings for each implementation
+ * @return string
+ */
 function dibs_admin_settings_list() {
   drupal_add_css(drupal_get_path('module', 'dibs') .'/dibs.admin.css');
 

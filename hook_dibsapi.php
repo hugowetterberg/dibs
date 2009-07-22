@@ -2,6 +2,11 @@
 // $Id$
 
 /**
+ * @file
+ * Documentation for hook_dibsapi.
+ */
+
+/**
  * Makes it possible for other modules to implement the DIBS payment gateway.
  *
  * @param $op
@@ -43,7 +48,7 @@ function hook_dibsapi($op = 'info', $delta = NULL, &$transaction = NULL, $a3 = N
       }
       break;
     case 'transaction_cancel':
-      switch($delta) {
+      switch ($delta) {
         case 0:
           drupal_goto(drupal_get_path_alias('some-path/payment/aborted/1'));
           break;
@@ -53,7 +58,7 @@ function hook_dibsapi($op = 'info', $delta = NULL, &$transaction = NULL, $a3 = N
         }
       break;
     case 'transaction_accept':
-      switch($delta) {
+      switch ($delta) {
         case 0:
           drupal_goto(drupal_get_path_alias('some-path/payment/receipt/1'));
           break;
@@ -68,5 +73,3 @@ function hook_dibsapi($op = 'info', $delta = NULL, &$transaction = NULL, $a3 = N
       break;
   }
 }
-
-?>

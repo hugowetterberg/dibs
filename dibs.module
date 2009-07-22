@@ -15,7 +15,7 @@ define('DIBS_DEFAULT_DELTA',  'default');
  */
 
 /**
- * Implemention of hook_init()
+ * Implementation of hook_init().
  */
 function dibs_init() {
   // Disabling cache on DIBS pages
@@ -40,7 +40,7 @@ function dibs_perm() {
 }
 
 /**
- * Implementation of hook_theme()
+ * Implementation of hook_theme().
  */
 function dibs_theme() {
   $themes = array();
@@ -282,8 +282,8 @@ function dibs_get_next_order_id($module, $delta, $update_table = TRUE, $add_pref
  * @param string $module
  * @param string $delta
  * @param bool $fallback
- * - If TRUE will we try to merge the settings array with the default one.
-*/
+ *  - If TRUE will we try to merge the settings array with the default one.
+ */
 function dibs_load_settings($module, $delta, $fallback = TRUE) {
   $settings = variable_get('dibs_settings_' . $module . '_' . $delta, array());
   if ($fallback) {
@@ -292,11 +292,11 @@ function dibs_load_settings($module, $delta, $fallback = TRUE) {
     foreach ((array)$default_settings as $group => $child) {
       if (is_array($child)) {
         foreach ($child as $key => $value) {
-          $merged_settings[$group][$key] = (strlen(trim($settings[$group][$key])) > 0) ? $settings[$group][$key] : $value;
+          $merged_settings[$group][$key] = (drupal_strlen(trim($settings[$group][$key])) > 0) ? $settings[$group][$key] : $value;
         }
       }
       else {
-        $merged_settings[$group] = (strlen(trim($settings[$group][$key])) > 0) ? $settings[$group] : $child;
+        $merged_settings[$group] = (drupal_strlen(trim($settings[$group][$key])) > 0) ? $settings[$group] : $child;
       }
     }
     return $merged_settings;
@@ -555,7 +555,7 @@ function dibs_create_delivery_line_fields($data) {
     foreach ($data as $key => $value) {
       if (strpos($key, 'customer_') !== FALSE && !empty($value)) {
         $key = str_replace('customer_', '', $key);
-        $form['delivery' . $i . '.' . ucfirst($key)] = array(
+        $form['delivery' . $i . '.' . drupal_ucfirst($key)] = array(
           '#type' => 'hidden',
           '#value' => $value
         );
