@@ -33,7 +33,7 @@ function dibs_admin_settings_list() {
     if ($i++ > 0) {
       $output .= '<p></p>';
     }
-    $output .= '<h3>'.t('Module').': '.$module.'</h3>';
+    $output .= '<h3>' . t('Module') . ': ' . $module . '</h3>';
 
     // Adding table headers
     $header = array(
@@ -43,10 +43,10 @@ function dibs_admin_settings_list() {
 
     $rows = array();
     // Looping through deltas for a specific module implementation of hook_dibsapi)).
-    foreach((array)module_invoke($module, 'dibsapi') as $delta => $info) {
+    foreach ((array)module_invoke($module, 'dibsapi') as $delta => $info) {
       $row = array(
         array('data' => $info['info'], 'class' => ''),
-        array('data' => l(t('edit'), 'admin/dibs/settings/edit/'.$module.'/'.$delta), 'class' => ''),
+        array('data' => l(t('edit'), 'admin/dibs/settings/edit/' . $module . '/' . $delta), 'class' => ''),
       );
       $rows[] = $row;
     }
@@ -67,7 +67,7 @@ function dibs_admin_settings_list() {
  * @see dibs_admin_settings_form_validate()
  * @see dibs_admin_settings_form_submit()
  */
-function dibs_admin_settings_form($form_state = array(), $module = null, $delta = null) {
+function dibs_admin_settings_form($form_state = array(), $module = NULL, $delta = NULL) {
   // Checking if the module and delta exists
   $info = module_invoke($module, 'dibsapi', 'info', $delta);
   if (empty($info) || !is_array($info)) {
@@ -378,7 +378,7 @@ function dibs_admin_settings_form_validate($form, &$form_state) {
   if ($default && empty($form_state['values']['orderid']['order_id'])) {
     form_set_error('orderid][order_id', t('Please, fill in the next order ID.'));
   }
-  else if (!empty($form_state['values']['orderid']['order_id']) && !is_numeric($form_state['values']['orderid']['order_id'])) {
+  elseif (!empty($form_state['values']['orderid']['order_id']) && !is_numeric($form_state['values']['orderid']['order_id'])) {
     form_set_error('orderid][order_id', t('The order ID should be numeric.'));
   }
 
@@ -413,7 +413,7 @@ function dibs_admin_settings_form_submit($form, &$form_state) {
     'flexwindow' => $flexwindow,
     'advanced' => $advanced
   );
-  variable_set('dibs_settings_'.$module.'_'.$delta, $settings);
+  variable_set('dibs_settings_' . $module . '_' . $delta, $settings);
 
   // Saving order ID settings
   $result = db_result(db_query("SELECT api_module FROM {dibs_order_id_settings} WHERE api_module = '%s' AND api_delta = '%s'", $module, $delta));

@@ -2,6 +2,11 @@
 // $Id$
 
 /**
+ * @file
+ * Install file for DIBS.
+ */
+
+/**
  * Implementation of hook_install().
  */
 function dibs_install() {

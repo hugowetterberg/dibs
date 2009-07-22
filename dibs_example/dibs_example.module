@@ -12,7 +12,7 @@
 function dibs_example_menu() {
   $items = array();
   $items['payment/dibs/example/form'] = array(
-    'title' => t('DIBS example payment'),
+    'title' => 'DIBS example payment',
     'description' => '',
     'type' => MENU_CALLBACK,
     'page callback' => 'drupal_get_form',
@@ -20,21 +20,21 @@ function dibs_example_menu() {
     'access callback' => TRUE,
   );
   $items['payment/dibs/example/callbackok'] = array(
-    'title' => t('DIBS example callback ok url'),
+    'title' => 'DIBS example callback ok url',
     'description' => '',
     'type' => MENU_CALLBACK,
     'page callback' => 'dibs_example_frontend_callback_ok',
     'access callback' => TRUE,
   );
   $items['payment/dibs/example/accept'] = array(
-    'title' => t('DIBS example payment accepted'),
+    'title' => 'DIBS example payment accepted',
     'description' => '',
     'type' => MENU_CALLBACK,
     'page callback' => 'dibs_example_frontend_accept',
     'access callback' => TRUE,
   );
   $items['payment/dibs/example/cancel'] = array(
-    'title' => t('DIBS example payment canceled'),
+    'title' => 'DIBS example payment canceled',
     'description' => '',
     'type' => MENU_CALLBACK,
     'page callback' => 'dibs_example_frontend_cancel',

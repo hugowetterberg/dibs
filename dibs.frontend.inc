@@ -26,11 +26,11 @@ function dibs_frontend_redirect_page($hash) {
       return '';
     }
   }
-  else if (!empty($data['api_module']) || !empty($data['api_delta'])) {
+  elseif (!empty($data['api_module']) || !empty($data['api_delta'])) {
     drupal_set_message(t('Error redirecting to DIBS: api_module or api_delta is missing!'), 'error');
     return '';
   }
-  else if ($data['payment_status'] > 0) {
+  elseif ($data['payment_status'] > 0) {
     drupal_set_message(t('Error redirecting to DIBS: the payment has already made!'), 'error');
     return '';
   }
@@ -95,15 +95,15 @@ function dibs_frontend_redirect_form($form_state = array(), $settings, $data) {
   );
   $form['accepturl'] = array(
     '#type' => 'hidden',
-    '#value' => url('payment/dibs/accept/'.$data['api_hash'], array('absolute' => TRUE)),
+    '#value' => url('payment/dibs/accept/' . $data['api_hash'], array('absolute' => TRUE)),
   );
   $form['cancelurl'] = array(
     '#type' => 'hidden',
-    '#value' => url('payment/dibs/cancel/'.$data['api_hash'], array('absolute' => TRUE)),
+    '#value' => url('payment/dibs/cancel/' . $data['api_hash'], array('absolute' => TRUE)),
   );
   $form['callbackurl'] = array(
     '#type' => 'hidden',
-    '#value' => url('payment/dibs/callbackok/'.$data['api_hash'], array('absolute' => TRUE)),
+    '#value' => url('payment/dibs/callbackok/' . $data['api_hash'], array('absolute' => TRUE)),
   );
 
   // Optional fields
@@ -150,7 +150,7 @@ function dibs_frontend_redirect_form($form_state = array(), $settings, $data) {
     $form['#action'] = 'https://payment.architrade.com/payment/start.pml';
   }
   // Flex Window fields
-  else if ($settings['general']['type'] == 'flex') {
+  elseif ($settings['general']['type'] == 'flex') {
     if (!empty($settings['flexwindow']['color'])) {
       $form['color'] = array(
         '#type' => 'hidden',
@@ -219,11 +219,11 @@ function dibs_frontend_cancel_page($hash) {
       return '';
     }
   }
-  else if (!empty($data['api_module']) || !empty($data['api_delta'])) {
+  elseif (!empty($data['api_module']) || !empty($data['api_delta'])) {
     drupal_set_message(t('Error redirecting to DIBS: api_module or api_delta is missing!'), 'error');
     return '';
   }
-  else if ($data['payment_status'] > 0) {
+  elseif ($data['payment_status'] > 0) {
     drupal_set_message(t('Error redirecting to DIBS: the payment has already made!'), 'error');
     return '';
   }
@@ -283,7 +283,7 @@ function dibs_frontend_cancel_form_submit($form, &$form_state) {
   db_query("UPDATE {dibs_transactions} SET payment_order_id = '%s' WHERE api_hash = '%s'", $order_id, $hash);
 
   // Redirecting to the payment redirect page
-  drupal_goto('payment/dibs/redirect/'.$hash);
+  drupal_goto('payment/dibs/redirect/' . $hash);
 
   exit;
 

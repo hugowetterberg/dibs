@@ -122,7 +122,7 @@ function dibs_menu() {
 
   // Front pages
   $items['payment/dibs/callbackok/%'] = array(
-    'title' => t('DIBS callback ok url'),
+    'title' => 'DIBS callback ok url',
     'description' => '',
     'type' => MENU_CALLBACK,
     'page callback' => 'dibs_frontend_dibs_callback_ok',
@@ -131,7 +131,7 @@ function dibs_menu() {
     'file' => 'dibs.frontend.inc',
   );
   $items['payment/dibs/accept/%'] = array(
-    'title' => t('DIBS payment accepted'),
+    'title' => 'DIBS payment accepted',
     'description' => '',
     'type' => MENU_CALLBACK,
     'page callback' => 'dibs_frontend_accept_page',
@@ -140,7 +140,7 @@ function dibs_menu() {
     'file' => 'dibs.frontend.inc',
   );
   $items['payment/dibs/cancel/%'] = array(
-    'title' => t('DIBS payment cancelled'),
+    'title' => 'DIBS payment cancelled',
     'description' => '',
     'type' => MENU_CALLBACK,
     'page callback' => 'dibs_frontend_cancel_page',
@@ -149,7 +149,7 @@ function dibs_menu() {
     'file' => 'dibs.frontend.inc',
   );
   $items['payment/dibs/redirect/%'] = array(
-    'title' => t('Redirecting to DIBS payment'),
+    'title' => 'Redirecting to DIBS payment',
     'description' => '',
     'type' => MENU_CALLBACK,
     'page callback' => 'dibs_frontend_redirect_page',
@@ -167,7 +167,7 @@ function dibs_menu() {
  */
 function dibs_admin_user_access() {
   $args = func_get_args();
-  foreach((array)$args[0] as $perm) {
+  foreach ((array)$args[0] as $perm) {
     if (user_access($perm)) {
       return TRUE;
     }
@@ -254,7 +254,7 @@ function dibs_get_next_order_id($module, $delta, $update_table = TRUE, $add_pref
     // We try to get the data from the default setting instead
     return dibs_get_next_order_id(DIBS_DEFAULT_MODULE, DIBS_DEFAULT_DELTA, $update_table, $add_prefix_suffix, FALSE);
   }
-  else if (is_array($settings)) {
+  elseif (is_array($settings)) {
     $next_order_id = $settings['order_id'] + 1;
 
     // Updating value in table
@@ -266,7 +266,7 @@ function dibs_get_next_order_id($module, $delta, $update_table = TRUE, $add_pref
     db_unlock_tables();
 
     // Returns the found value
-    return $add_prefix_suffix ? $settings['order_id_prefix'].$next_order_id.$settings['order_id_suffix'] : $next_order_id;
+    return $add_prefix_suffix ? $settings['order_id_prefix'] . $next_order_id . $settings['order_id_suffix'] : $next_order_id;
   }
   else {
     // Unlocking tables
@@ -285,13 +285,13 @@ function dibs_get_next_order_id($module, $delta, $update_table = TRUE, $add_pref
  * - If TRUE will we try to merge the settings array with the default one.
 */
 function dibs_load_settings($module, $delta, $fallback = TRUE) {
-  $settings = variable_get('dibs_settings_'.$module.'_'.$delta, array());
+  $settings = variable_get('dibs_settings_' . $module . '_' . $delta, array());
   if ($fallback) {
     $merged_settings = array();
-    $default_settings = variable_get('dibs_settings_'.DIBS_DEFAULT_MODULE.'_'.DIBS_DEFAULT_DELTA, array());
-    foreach((array)$default_settings as $group => $child) {
+    $default_settings = variable_get('dibs_settings_' . DIBS_DEFAULT_MODULE . '_' . DIBS_DEFAULT_DELTA, array());
+    foreach ((array)$default_settings as $group => $child) {
       if (is_array($child)) {
-        foreach($child as $key => $value) {
+        foreach ($child as $key => $value) {
           $merged_settings[$group][$key] = (strlen(trim($settings[$group][$key])) > 0) ? $settings[$group][$key] : $value;
         }
       }
@@ -328,7 +328,7 @@ function dibs_load_transaction($key = NULL, $op = 'tid') {
   if ($op == 'tid' && is_numeric($key)) {
     $result = db_query('SELECT * FROM {dibs_transactions} WHERE tid = %d', $key);
   }
-  else if ($op == 'hash' && !empty($key)) {
+  elseif ($op == 'hash' && !empty($key)) {
     $result = db_query("SELECT * FROM {dibs_transactions} WHERE api_hash = '%s'", $key);
   }
   else {
@@ -362,7 +362,7 @@ function dibs_payment_prepare($data) {
       return '';
     }
   }
-  else if (!empty($data['api_module']) || !empty($data['api_delta'])) {
+  elseif (!empty($data['api_module']) || !empty($data['api_delta'])) {
     drupal_set_message(t('Error preparing the payment: api_module or api_delta is missing!'), 'error');
     return '';
   }
@@ -405,7 +405,7 @@ function dibs_payment_prepare($data) {
   $order_id = dibs_get_next_order_id($data['api_module'], $data['api_deta']);
 
   // Creating new api_hash
-  $hash = sha1(time().$order_id.drupal_get_private_key());
+  $hash = sha1(time() . $order_id . drupal_get_private_key());
 
   // Creating dibs transaction
   db_query("
@@ -482,7 +482,7 @@ function dibs_payment_prepare($data) {
   $_SESSION['dibs'][$data['api_module']][$data['api_delta']]['hash'] = $hash;
 
   // Redirecting to the payment redirect page
-  drupal_goto('payment/dibs/redirect/'.$hash);
+  drupal_goto('payment/dibs/redirect/' . $hash);
 
   exit;
 
@@ -501,10 +501,10 @@ function dibs_create_order_line_fields($data) {
   if (is_array($data)) {
     if (is_array(current($data))) {
       $i = 0;
-      foreach($data as $line) {
+      foreach ($data as $line) {
         $j = 1;
-        foreach($line as $column) {
-          $form['ordline'.$i.'-'.$j] = array(
+        foreach ($line as $column) {
+          $form['ordline' . $i . '-' . $j] = array(
             '#type' => 'hidden',
             '#value' => $column
           );
@@ -529,8 +529,8 @@ function dibs_create_price_line_fields($data) {
   $form = array();
   if (is_array($data)) {
     $i = 1;
-    foreach($data as $key => $value) {
-      $form['priceinfo'.$i.'.'.$key] = array(
+    foreach ($data as $key => $value) {
+      $form['priceinfo' . $i . '.' . $key] = array(
         '#type' => 'hidden',
         '#value' => $value
       );
@@ -552,10 +552,10 @@ function dibs_create_delivery_line_fields($data) {
   $form = array();
   if (is_array($data)) {
     $i = 1;
-    foreach($data as $key => $value) {
+    foreach ($data as $key => $value) {
       if (strpos($key, 'customer_') !== FALSE && !empty($value)) {
         $key = str_replace('customer_', '', $key);
-        $form['delivery'.$i.'.'.ucfirst($key)] = array(
+        $form['delivery' . $i . '.' . ucfirst($key)] = array(
           '#type' => 'hidden',
           '#value' => $value
         );
@@ -573,8 +573,8 @@ function dibs_create_delivery_line_fields($data) {
  */
 function template_preprocess_dibs_redirect_page(&$variables) {
   $transaction = $variables['transaction'];
-  $variables['template_files'][] = 'dibs-redirect-page-'. $transaction['api_module'];
-  $variables['template_files'][] = 'dibs-redirect-page-'. $transaction['api_module'] .'-'.$transaction['api_delta'];
+  $variables['template_files'][] = 'dibs-redirect-page-' . $transaction['api_module'];
+  $variables['template_files'][] = 'dibs-redirect-page-' . $transaction['api_module'] . '-' . $transaction['api_delta'];
 }
 
 /**
@@ -584,8 +584,8 @@ function template_preprocess_dibs_redirect_page(&$variables) {
  */
 function template_preprocess_dibs_cancel_page(&$variables) {
   $transaction = $variables['transaction'];
-  $variables['template_files'][] = 'dibs-cancel-page-'. $transaction['api_module'];
-  $variables['template_files'][] = 'dibs-cancel-page-'. $transaction['api_module'] .'-'.$transaction['api_delta'];
+  $variables['template_files'][] = 'dibs-cancel-page-' . $transaction['api_module'];
+  $variables['template_files'][] = 'dibs-cancel-page-' . $transaction['api_module'] . '-' . $transaction['api_delta'];
 }
 
 /**
@@ -595,6 +595,6 @@ function template_preprocess_dibs_cancel_page(&$variables) {
  */
 function template_preprocess_dibs_accept_page(&$variables) {
   $transaction = $variables['transaction'];
-  $variables['template_files'][] = 'dibs-accept-page-'. $transaction['api_module'];
-  $variables['template_files'][] = 'dibs-accept-page-'. $transaction['api_module'] .'-'.$transaction['api_delta'];
+  $variables['template_files'][] = 'dibs-accept-page-' . $transaction['api_module'];
+  $variables['template_files'][] = 'dibs-accept-page-' . $transaction['api_module'] . '-' . $transaction['api_delta'];
 }
