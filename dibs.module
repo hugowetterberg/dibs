@@ -408,75 +408,30 @@ function dibs_payment_prepare($data) {
   $hash = sha1(time() . $order_id . drupal_get_private_key());
 
   // Creating dibs transaction
-  db_query("
-          INSERT INTO {dibs_transactions}
-          (
-            api_module,
-            api_delta,
-            api_hash,
-            order_info_short,
-            order_info_long,
-            order_price_info,
-            payment_time,
-            payment_order_id,
-            payment_status,
-            payment_currency,
-            payment_price,
-            payment_transaction_type,
-            customer_uid,
-            customer_name,
-            customer_address,
-            customer_address_2,
-            customer_city,
-            customer_zipcode,
-            customer_country,
-            customer_email,
-            customer_phone
-          )
-          VALUES
-          (
-            '%s',
-            '%s',
-            '%s',
-            '%s',
-            '%s',
-            '%s',
-            NOW(),
-            '%s',
-            0,
-            '%s',
-            %f,
-            '%s',
-            %d,
-            '%s',
-            '%s',
-            '%s',
-            '%s',
-            '%s',
-            '%s',
-            '%s',
-            '%s'
-          )",
-          $data['api_module'],
-          $data['api_delta'],
-          $hash,
-          $data['order_info_short'],
-          serialize($data['order_info_long']),
-          serialize($data['order_price_info']),
-          $order_id,
-          $settings['general']['currency'],
-          $data['payment_price'],
-          $data['payment_transaction_type'],
-          $data['customer_uid'],
-          $data['customer_name'],
-          $data['customer_address'],
-          $data['customer_address_2'],
-          $data['customer_city'],
-          $data['customer_zipcode'],
-          $data['customer_country'],
-          $data['customer_email'],
-          $data['customer_phone']
+  $transaction = array(
+    'api_module' => $data['api_module'],
+    'api_delta' => $data['api_delta'],
+    'api_hash' => $hash,
+    'order_info_short' => $data['order_info_short'],
+    'order_info_long' => serialize($data['order_info_long']),
+    'order_price_info' => serialize($data['order_price_info']),
+    'payment_time' => date('Y-m-d H:i:s', time()),
+    'payment_order_id' => $order_id,
+    'payment_status' => 0,
+    'payment_currency' => $settings['general']['currency'],
+    'payment_price' => $data['payment_price'],
+    'payment_transaction_type' => $data['payment_transaction_type'],
+    'customer_uid' => $data['customer_uid'],
+    'customer_name' => $data['customer_name'],
+    'customer_address' => $data['customer_address'],
+    'customer_address_2' => $data['customer_address_2'],
+    'customer_city' => $data['customer_city'],
+    'customer_zipcode' => $data['customer_zipcode'],
+    'customer_country' => $data['customer_country'],
+    'customer_email' => $data['customer_email'],
+    'customer_phone' => $data['customer_phone'],
   );
+  drupal_write_record('dibs_transaction', $transaction);
 
   // Saving new api_hash in session
   $_SESSION['dibs'][$data['api_module']][$data['api_delta']]['hash'] = $hash;
