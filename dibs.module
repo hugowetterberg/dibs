@@ -286,7 +286,7 @@ function dibs_get_next_order_id($module, $delta, $update_table = TRUE, $add_pref
  */
 function dibs_load_settings($module, $delta, $fallback = TRUE) {
   $settings = variable_get('dibs_settings_' . $module . '_' . $delta, array());
-  if ($fallback) {
+  if ($fallback && ($module != DIBS_DEFAULT_MODULE || $delta != DIBS_DEFAULT_DELTA)) {
     $merged_settings = array();
     $default_settings = variable_get('dibs_settings_' . DIBS_DEFAULT_MODULE . '_' . DIBS_DEFAULT_DELTA, array());
     foreach ((array)$default_settings as $group => $child) {
@@ -402,7 +402,7 @@ function dibs_payment_prepare($data) {
   );
 
   // Generating order id
-  $order_id = dibs_get_next_order_id($data['api_module'], $data['api_deta']);
+  $order_id = is_numeric($data['payment_order_id']) ? $data['payment_order_id'] : dibs_get_next_order_id($data['api_module'], $data['api_delta']);
 
   // Creating new api_hash
   $hash = sha1(time() . $order_id . drupal_get_private_key());

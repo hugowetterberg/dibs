@@ -123,6 +123,13 @@ function dibs_admin_settings_form($form_state = array(), $module = NULL, $delta 
     '#default_value' => dibs_get_settings_value($module, $delta, 'general', 'type', ($default ? 1 : '')),
     '#description' => t('If enabled, DIBS will make some extra checks on the sended data, to be sure that no one manipulated it. If enabled should the keys below be filled in!'),
   );
+  $form['general']['retry_handling'] = array(
+    '#type' => 'select',
+    '#title' => t('Order id handling after cancel'),
+    '#options' => array('' => '', 'new_order_id' => t('Generate a new order id'), 'add_retry_suffix' => t('Add retry suffix'), 'unchanged' => t('Preserve order id')),
+    '#default_value' => dibs_get_settings_value($module, $delta, 'general', 'retry_handling', ($default ? 'new_order_id' : '')),
+    '#description' => t('How the order id should be handled when the user retries a cancelled payment. Some card providers (edankort) require a new order ID after cancellation.'),
+  );
   $form['general']['md5'] = array(
     '#type' => 'select',
     '#title' => t('Perform MD5 control'),

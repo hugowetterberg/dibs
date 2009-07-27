@@ -67,6 +67,10 @@ function dibs_frontend_redirect_page($hash) {
  * @return array
  */
 function dibs_frontend_redirect_form($form_state = array(), $settings, $data) {
+  if ($data['payment_retry_count']) {
+    $data['payment_order_id'] .= '-' . $data['payment_retry_count'];
+  }
+
   // Creating form fields
   // Required fields
   $form['merchant'] = array(
@@ -272,15 +276,24 @@ function dibs_frontend_cancel_form_submit($form, &$form_state) {
 
   // Loading the transaction
   $data = dibs_load_transaction($hash, 'hash');
+  $settings = dibs_load_settings($data['api_module'], $data['api_delta'], TRUE);
 
-  // We are forcing an update of the order id, because edankort requires a new one
-  // if the user has cancelled the payment.
-
-  // Generating order id
-  $order_id = dibs_get_next_order_id($data['api_module'], $data['api_deta']);
-
-  // Updating transaction
-  db_query("UPDATE {dibs_transactions} SET payment_order_id = '%s' WHERE api_hash = '%s'", $order_id, $hash);
+  // Make changes to order id if dictated by retry policy
+  $retry = isset($settings['general']['retry_handling']) ? $settings['general']['retry_handling'] : 'new_order_id';
+  switch ($retry) {
+    case 'new_order_id':
+      // Generating order id
+      $order_id = dibs_get_next_order_id($data['api_module'], $data['api_delta']);
+      // Updating transaction
+      db_query("UPDATE {dibs_transactions} SET payment_order_id = '%s' WHERE api_hash = '%s'", $order_id, $hash);
+      break;
+    case 'add_retry_suffix':
+      $suffixed = array(
+        'api_hash' => $hash,
+        'payment_retry_count' => $data['payment_retry_count']+1,
+      );
+      drupal_write_record('dibs_transactions', $suffixed, array('api_hash'));
+  }
 
   // Redirecting to the payment redirect page
   drupal_goto('payment/dibs/redirect/' . $hash);

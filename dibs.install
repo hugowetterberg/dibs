@@ -95,6 +95,12 @@ function dibs_schema() {
         'default' => '',
         'description' => t('Order id'),
       ),
+      'payment_retry_count' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => t('Payment retry count that can be used to suffix order number'),
+      ),
       'payment_status' => array(
         'type' => 'int',
         'length' => 1,
@@ -310,3 +316,15 @@ function dibs_schema() {
   return $schema;
 }
 
+function dibs_update_6001() {
+  $ret = array();
+
+  db_add_field($ret, 'dibs_transactions', 'payment_retry_count', array(
+    'type' => 'int',
+    'not null' => TRUE,
+    'default' => 0,
+    'description' => t('Payment retry count that can be used to suffix order number'),
+  ));
+
+  return $ret;
+}
