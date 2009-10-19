@@ -41,11 +41,6 @@ function dibs_frontend_redirect_page($hash) {
   // Getting redirect form
   $form = drupal_get_form('dibs_frontend_redirect_form', $settings, $data);
 
-  // We are forcing the accept-charset to be ISO-8859-1, else will the order and delivery
-  // info sent to DIBS be shown with wrong characters in the payment window and in their
-  // administration system.
-  $form = str_replace('accept-charset="UTF-8"', 'accept-charset="ISO-8859-1"', $form);
-
   // Adding autosubmit javascript
   drupal_add_js("
     if (Drupal.jsEnabled) {
